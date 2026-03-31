@@ -5,7 +5,7 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 
-# Bu satır uyarıyı susturacak ve sistemi 2026 standartlarına çekecek
+# Artık buna gerek kalmayabilir ama kalsa da zararı olmaz
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -17,12 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5 # v4 -> v5 (Node 24 desteği için)
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6 # v5 -> v6 (Node 24 desteği için)
         with:
-          python-version: '3.11'
+          python-version: '3.12' # 2026'da 3.12 oldukça stabil
 
       - name: Install dependencies
         run: |
