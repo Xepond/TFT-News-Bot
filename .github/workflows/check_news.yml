@@ -1,0 +1,35 @@
+name: Check TFT News
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Her saat başı çalışır
+  workflow_dispatch: # Manuel çalıştırmak istersen
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run script
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: python tft_news.py
+
+      - name: Commit last news update
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add last_news.txt
+          git commit -m "Update last news" || echo "No changes to commit"
+          git push
