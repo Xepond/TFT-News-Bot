@@ -1,4 +1,4 @@
-import requests
+    import requests
 from bs4 import BeautifulSoup
 import os
 
@@ -55,24 +55,10 @@ def main():
     if news['link'] != last_link:
 
         ROLE_ID = "1483254703818276976"
-        
-        # DEĞİŞEN TEK KISIM BURASI: Footer ekleyebilmek için senin metnini bir "embed" içine aldık.
         payload = {
             "username": "TFT Haber Botu",
-            "content": f"📢 **TFT Sayfasında Yeni Bir Güncelleme Var!** <@&{ROLE_ID}>",
-            "embeds": [
-                {
-                    "title": news['title'],
-                    "description": news['link'],
-                    "color": 16753920, # TFT Turuncusu
-                    "footer": {
-                        "text": "Eskişehir Riot Games Kampüs Elçiliği",
-                        "icon_url": "https://i.imgur.com/sqOABeG.jpeg"
-                    }
-                }
-            ]
+            "content": f"📢 **TFT Sayfasında Yeni Bir Güncelleme Var!** <@&{ROLE_ID}> \n\n**{news['title']}**\n{news['link']}"
         }
-        
         requests.post(WEBHOOK_URL, json=payload)
         
         # Son haberi güncelle
