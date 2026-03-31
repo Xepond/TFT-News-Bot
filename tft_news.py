@@ -9,20 +9,37 @@ LAST_NEWS_FILE = "last_news.txt"
 
 def get_latest_tft_news():
     headers = {"User-Agent": "Mozilla/5.0"}
-    response = requests.get(TARGET_URL, headers=headers)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
-    # Riot'un site yapısına göre ilk haber kartını bulalım
-    article = soup.find('a', href=True) # Genelde haberler <a> içinde olur
-    if not article:
-        return None
-    
-    title = article.text.strip()
-    link = article['href']
-    if not link.startswith('http'):
-        link = "https://teamfighttactics.leagueoflegends.com" + link
+    try:
+        response = requests.get(TARGET_URL, headers=headers)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')
         
-    return {"title": title, "link": link}
+        # 1. Önce ana haber kartını buluyoruz
+        article_card = soup.find('a', href=True)
+        if not article_card:
+            return None
+            
+        # 2. SADECE başlık elementini arıyoruz (H2 etiketi genellikle temiz başlığı içerir)
+        title_element = article_card.find('h2') 
+        
+        # Eğer h2 yoksa, 'title' içeren class'ları deneyelim (Riot bazen değiştirir)
+        if not title_element:
+            title_element = article_card.select_one('[class*="title"]')
+
+        if title_element:
+            title = title_element.get_text().strip()
+        else:
+            # Yedek plan: Metni al ve temizle (İlk satırı al gibi)
+            title = article_card.get_text(separator='|').split('|')[0].strip()
+
+        link = article_card['href']
+        if not link.startswith('http'):
+            link = "https://teamfighttactics.leagueoflegends.com" + link
+            
+        return {"title": title, "link": link}
+    except Exception as e:
+        print(f"Hata: {e}")
+        return None
 
 def main():
     news = get_latest_tft_news()
