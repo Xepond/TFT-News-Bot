@@ -2,14 +2,13 @@ import requests
 from bs4 import BeautifulSoup
 import os
 
-# Ayarlar
 TARGET_URL = "https://teamfighttactics.leagueoflegends.com/tr-tr/news/"
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK")
 LAST_NEWS_FILE = "last_news.txt"
 ROLE_ID = "1483254703818276976"
 
-# DİKKAT: Kulüp logunun İNTERNET LİNKİNİ buraya yapıştır
-CLUB_LOGO_URL = "https://imgur.com/a/5oo2FQ6"
+# BURAYA ".png" VEYA ".jpg" İLE BİTEN DIRECT LİNKİ YAPIŞTIR!
+CLUB_LOGO_URL = "https://imgur.com/a/5oo2FQ6.png" 
 
 def get_latest_tft_news():
     headers = {"User-Agent": "Mozilla/5.0"}
@@ -18,38 +17,47 @@ def get_latest_tft_news():
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # 1. Ana haber kartını buluyoruz
-        article_card = soup.find('a', href=True)
+        # 1. Haber kartını bul (Sadece içinde '/news/' veya '/game-updates/' geçen linkleri al ki menü linklerine takılmayalım)
+        article_card = soup.find('a', href=lambda x: x and ('/news/' in x.lower() or '/game-updates/' in x.lower()))
         if not article_card: return None
-            
-        # 2. Başlık elementini arıyoruz (Senin sağlam mantığın)
-        title_element = article_card.find('h2') 
-        if not title_element:
-            title_element = article_card.select_one('[class*="title"]')
 
-        if title_element:
-            title = title_element.get_text().strip()
-        else:
-            title = article_card.get_text(separator='|').split('|')[0].strip()
+        # 2. Başlığı Bulma (Kategori etiketlerini atlayıp ASIL başlığı bulma mantığı)
+        title = ""
+        # Bütün h2, h3 ve p etiketlerini topla, en uzun metne sahip olan genelde asıl başlıktır
+        text_elements = article_card.find_all(['h2', 'h3', 'p', 'span'])
+        longest_text = ""
+        for elem in text_elements:
+            text = elem.get_text(strip=True)
+            if len(text) > len(longest_text) and text not in ["Oyun Güncellemeleri", "Yama Notları", "Geliştiricilerden"]:
+                longest_text = text
+        
+        title = longest_text if longest_text else "Yeni TFT Haberi"
 
-        # 3. Linki oluşturuyoruz
+        # 3. Linki Oluştur
         link = article_card['href']
         if not link.startswith('http'):
             link = "https://teamfighttactics.leagueoflegends.com" + link
 
-        # 4. RESİM BULMA (Yeni Kısım)
+        # 4. Haberin Resmini Bul
         img_tag = article_card.find('img')
         image_url = ""
         if img_tag:
-            # Riot'un farklı resim yükleme tekniklerine karşı önlem
             image_url = img_tag.get('src') or img_tag.get('data-src') or ""
-            if not image_url and img_tag.get('srcset'):
-                image_url = img_tag.get('srcset').split(" ")[0]
-            
+            # Bazen Riot arka plan resmi kullanır
+        else:
+            div_img = article_card.find('div', style=lambda s: s and 'background-image' in s)
+            if div_img:
+                # Arka plan urlsini ayrıştır
+                style = div_img['style']
+                start = style.find("url('") + 5
+                end = style.find("')", start)
+                if start > 4 and end > 0:
+                    image_url = style[start:end]
+
         return {"title": title, "link": link, "image": image_url}
     
     except Exception as e:
-        print(f"Hata (Scraping): {e}")
+        print(f"Scraping Hatası: {e}")
         return None
 
 def main():
@@ -63,35 +71,33 @@ def main():
 
     if news['link'] != last_link:
         
-        # HATA KORUMASI 1: Temel Embed Yapısı (Resimsiz)
+        # Embed Yapısını Yeniden Tasarladık
         embed = {
             "title": news['title'],
-            "url": news['link'],
-            "color": 16753920 # TFT Turuncusu
+            "url": news['link'], # Başlığı tıklanabilir yapar
+            "description": f"Haberin tamamını okumak için [Riot Games Sitesine Git]({news['link']})\n\n🔗 **Direkt Link:** {news['link']}",
+            "color": 16753920 
         }
 
-        # HATA KORUMASI 2: Sadece geçerli bir resim linki varsa Embed'e ekle
+        # Eğer haber resmi varsa ekle
         if news.get('image') and news['image'].startswith("http"):
             embed["image"] = {"url": news['image']}
 
-        # HATA KORUMASI 3: Sadece geçerli bir logo linki varsa Footer'a ekle
-        footer_dict = {"text": "ESOGÜ Riot Kampüs Elçiliği"}
-        if CLUB_LOGO_URL.startswith("http"):
-            footer_dict["icon_url"] = CLUB_LOGO_URL
-        embed["footer"] = footer_dict
+        # Kulüp logosunu .png/.jpg kontrolü ile ekle
+        if CLUB_LOGO_URL.startswith("http") and ("png" in CLUB_LOGO_URL.lower() or "jpg" in CLUB_LOGO_URL.lower()):
+            embed["footer"] = {
+                "text": "ESOGÜ Riot Kampüs Elçiliği",
+                "icon_url": CLUB_LOGO_URL
+            }
+            embed["thumbnail"] = {"url": CLUB_LOGO_URL} # Logoyu sağ üste de küçük olarak ekler, çok şık durur
 
-        # Ana Payload'u birleştiriyoruz
         payload = {
             "username": "TFT Haber Botu",
             "content": f"📢 **TFT Sayfasında Yeni Bir Güncelleme Var!** <@&{ROLE_ID}>",
             "embeds": [embed]
         }
 
-        # İsteğe bağlı: Botun profil resmini de kulüp logon yapıyoruz
-        if CLUB_LOGO_URL.startswith("http"):
-            payload["avatar_url"] = CLUB_LOGO_URL
-
-        # Discord'a gönderim
+        # Gönderim
         res = requests.post(WEBHOOK_URL, json=payload)
         
         if res.status_code in [200, 204]:
@@ -99,7 +105,7 @@ def main():
                 f.write(news['link'])
             print(f"Başarı: Yeni haber gönderildi! ({news['title']})")
         else:
-            print(f"Discord Hatası! Kod: {res.status_code}, Detay: {res.text}")
+            print(f"Discord Hatası! Kod: {res.status_code}")
     else:
         print("Yeni haber yok.")
 
