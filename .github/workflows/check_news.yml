@@ -3,23 +3,27 @@ name: Check TFT News
 on:
   schedule:
     - cron: '0 * * * *' # Her saat başı çalışır
-  workflow_dispatch: # Manuel çalıştırmak istersen
+  workflow_dispatch: # Manuel çalıştırmak için
+
+# BURASI KRİTİK: Script'in dosyayı güncelleyip repoya geri yazabilmesi için izin veriyoruz
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # v3'ten v4'e yükseltildi
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # v4'ten v5'e yükseltildi
         with:
-          python-version: '3.9'
+          python-version: '3.11' # Daha güncel bir Python sürümü
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install requests beautifulsoup4
 
       - name: Run script
         env:
@@ -28,8 +32,8 @@ jobs:
 
       - name: Commit last news update
         run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add last_news.txt
-          git commit -m "Update last news" || echo "No changes to commit"
-          git push
+          # Değişiklik yoksa hata vermemesi için kontrol ekledik
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update last news" && git push)
