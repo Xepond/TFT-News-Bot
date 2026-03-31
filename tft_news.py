@@ -53,10 +53,11 @@ def main():
         last_link = ""
 
     if news['link'] != last_link:
-        # Yeni haber var! Discord'a gönder
+
+        ROLE_ID = "1483254703818276976"
         payload = {
             "username": "TFT Haber Botu",
-            "content": f"📢 **TFT Sayfasında Yeni Bir Güncelleme Var!**\n\n**{news['title']}**\n{news['link']}"
+            "content": f"📢 <@&{ROLE_ID}> **TFT Sayfasında Yeni Bir Güncelleme Var!**\n\n**{news['title']}**\n{news['link']}"
         }
         requests.post(WEBHOOK_URL, json=payload)
         
