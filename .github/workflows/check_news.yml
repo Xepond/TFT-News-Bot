@@ -2,7 +2,7 @@ name: Check TFT News
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '17 * * * *'
   workflow_dispatch:
 
 # Artık buna gerek kalmayabilir ama kalsa da zararı olmaz
