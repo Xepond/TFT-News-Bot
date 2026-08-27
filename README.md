@@ -20,7 +20,7 @@ A serverless automation bot that automatically tracks the latest official **Team
 
 ### ✨ Features
 
-- 🔍 **Automated Web Scraping:** Regularly scrapes the official TFT news portal (`teamfighttactics.leagueoflegends.com`).
+- 🔍 **Automated Web Scraping:** Regularly scrapes the official TFT news portal (`https://teamfighttactics.leagueoflegends.com/tr-tr/news/`).
 - ⚡ **24/7 Serverless Execution:** Runs on **GitHub Actions** hourly without requiring any VPS or dedicated server.
 - 📢 **Discord Webhook Notifications:** Instantly sends article titles and direct URLs to your Discord channel with custom role pings.
 - 🛡️ **Duplicate Prevention:** Tracks the last posted article in `last_news.txt` to prevent duplicate notifications.
@@ -106,7 +106,7 @@ Resmi **Teamfight Tactics (TFT)** web sitesindeki en son haberleri, güncellemel
 
 ### ✨ Özellikler
 
-- 🔍 **Otomatik Web Scraping:** Resmi TFT haber sayfasını (`teamfighttactics.leagueoflegends.com`) düzenli aralıklarla tarar.
+- 🔍 **Otomatik Web Scraping:** Resmi TFT haber sayfasını (`https://teamfighttactics.leagueoflegends.com/tr-tr/news/`) düzenli aralıklarla tarar.
 - ⚡ **7/24 Sunucusuz Çalışma:** Herhangi bir VPS veya sunucuya ihtiyaç duymadan **GitHub Actions** üzerinde saatlik olarak çalışır.
 - 📢 **Discord Webhook Bildirimleri:** Yeni bir haber veya yama notu düştüğünde belirlenen rolü etiketleyerek Discord kanalına anında haber başlığı ve bağlantısı gönderir.
 - 🛡️ **Mükerrer Bildirim Koruması:** Gönderilen son haber linkini `last_news.txt` dosyasında depolar ve aynı haberin tekrar tekrar iletilmesini engeller.
